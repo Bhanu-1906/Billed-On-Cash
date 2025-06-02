@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Scheme Engine</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      color: #333;
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 40px;
+      color: white;
+    }
+
+    .header h1 {
+      font-size: 3rem;
+      font-weight: 700;
+      margin-bottom: 10px;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    }
+
+    .header p {
+      font-size: 1.2rem;
+      opacity: 0.9;
+    }
+
+    .card {
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+      margin-bottom: 30px;
+      overflow: hidden;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 30px 60px rgba(0,0,0,0.15);
+    }
+
+    .card-header {
+      background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+      color: white;
+      padding: 25px 30px;
+      font-size: 1.5rem;
+      font-weight: 600;
+    }
+
+    .card-body {
+      padding: 30px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 25px;
+      margin-bottom: 30px;
+    }
+
+    .form-group {
+      position: relative;
+    }
+
+    .form-group label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: #555;
+      font-size: 0.95rem;
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 12px 16px;
+      border: 2px solid #e1e5e9;
+      border-radius: 12px;
+      font-size: 1rem;
+      transition: all 0.3s ease;
+      background: #f8f9fa;
+    }
+
+    .form-control:focus {
+      outline: none;
+      border-color: #4facfe;
+      background: white;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(79, 172, 254, 0.2);
+    }
+
+    .radio-group {
+      display: flex;
+      gap: 15px;
+      flex-wrap: wrap;
+      margin-top: 8px;
+    }
+
+    .radio-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 16px;
+      background: #f8f9fa;
+      border: 2px solid #e1e5e9;
+      border-radius: 25px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-weight: 500;
+    }
+
+    .radio-item:hover {
+      background: #e3f2fd;
+      border-color: #4facfe;
+    }
+
+    .radio-item input[type="radio"] {
+      margin: 0;
+      accent-color: #4facfe;
+    }
+
+    .radio-item input[type="radio"]:checked + span {
+      color: #4facfe;
+      font-weight: 600;
+    }
+
+    .checkbox-group {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-top: 8px;
+    }
+
+    .checkbox-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 16px;
+      background: #f8f9fa;
+      border: 2px solid #e1e5e9;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-weight: 500;
+    }
+
+    .checkbox-item:hover {
+      background: #e8f5e8;
+      border-color: #4caf50;
+    }
+
+    .checkbox-item input[type="checkbox"] {
+      margin: 0;
+      accent-color: #4caf50;
+    }
+
+    .conditional-section {
+      background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+      border-radius: 16px;
+      padding: 25px;
+      margin-top: 20px;
+      border-left: 5px solid #ff9800;
+      transition: all 0.3s ease;
+    }
+
+    .conditional-section h4 {
+      color: #e65100;
+      margin-bottom: 20px;
+      font-size: 1.2rem;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .btn {
+      padding: 14px 28px;
+      border: none;
+      border-radius: 12px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+      transition: left 0.5s;
+    }
+
+    .btn:hover::before {
+      left: 100%;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      margin-right: 15px;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 25px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn-success {
+      background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+      color: white;
+    }
+
+    .btn-success:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 25px rgba(79, 172, 254, 0.4);
+    }
+
+    .response-section {
+      margin-top: 30px;
+    }
+
+    .response-box {
+      background: #1a1a1a;
+      color: #00ff00;
+      padding: 25px;
+      border-radius: 16px;
+      font-family: 'Courier New', monospace;
+      font-size: 0.9rem;
+      line-height: 1.6;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      box-shadow: inset 0 4px 8px rgba(0,0,0,0.3);
+      border: 1px solid #333;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+
+    .section-divider {
+      height: 3px;
+      background: linear-gradient(90deg, #667eea, #764ba2, #667eea);
+      border: none;
+      border-radius: 2px;
+      margin: 40px 0;
+    }
+
+    .loading {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 2px solid #f3f3f3;
+      border-top: 2px solid #4facfe;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-left: 10px;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .success-message {
+      background: linear-gradient(135deg, #4caf50, #45a049);
+      color: white;
+      padding: 15px 20px;
+      border-radius: 12px;
+      margin-top: 20px;
+      box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+    }
+
+    .error-message {
+      background: linear-gradient(135deg, #f44336, #d32f2f);
+      color: white;
+      padding: 15px 20px;
+      border-radius: 12px;
+      margin-top: 20px;
+      box-shadow: 0 4px 12px rgba(244, 67, 54, 0.3);
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        padding: 15px;
+      }
+      
+      .header h1 {
+        font-size: 2rem;
+      }
+      
+      .form-grid {
+        grid-template-columns: 1fr;
+        gap: 20px;
+      }
+      
+      .radio-group {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      
+      .card-body {
+        padding: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🎯 Scheme Engine</h1>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        📝 Create New Scheme
+      </div>
+      <div class="card-body">
+        <form id="scheme-form">
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Scheme ID</label>
+              <input type="text" name="scheme_id" class="form-control" required placeholder="Enter unique scheme ID">
+            </div>
+            <div class="form-group">
+              <label>Scheme Name</label>
+              <input type="text" name="scheme_name" class="form-control" required placeholder="Enter scheme name">
+            </div>
+            <div class="form-group">
+              <label>Description</label>
+              <input type="text" name="scheme_description" class="form-control" placeholder="Brief description of the scheme">
+            </div>
+            <div class="form-group">
+              <label>Valid From</label>
+              <input type="date" name="valid_from" class="form-control" required>
+            </div>
+            <div class="form-group">
+              <label>Valid To</label>
+              <input type="date" name="valid_to" class="form-control" required>
+            </div>
+            <div class="form-group">
+              <label>Customer Category</label>
+              <input type="text" name="customer_category" class="form-control" required >
+            </div>
+            <div class="form-group">
+              <label>Region</label>
+              <input type="text" name="region" class="form-control" required placeholder="e.g., North, South, East, West">
+            </div>
+            <div class="form-group">
+              <label>Scheme Type</label>
+              <input type="text" name="scheme_type" class="form-control" >
+            </div>
+            <div class="form-group">
+              <label>File URL</label>
+              <input type="text" name="file_url" class="form-control" placeholder="Optional file URL">
+            </div>
+            <div class="form-group">
+              <label>Priority Level</label>
+              <input type="number" name="priority_level" class="form-control" value="0" min="0" max="10">
+            </div>
+          </div>
+
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Customer Classification</label>
+              <div class="radio-group">
+                <label class="radio-item">
+                  <input type="radio" name="customer_classification" value="red" required>
+                  <span>🔴 Red</span>
+                </label>
+                <label class="radio-item">
+                  <input type="radio" name="customer_classification" value="amber">
+                  <span>🟡 Amber</span>
+                </label>
+                <label class="radio-item">
+                  <input type="radio" name="customer_classification" value="green">
+                  <span>🟢 Green</span>
+                </label>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>Scheme Template</label>
+              <div class="radio-group">
+                <label class="radio-item">
+                  <input type="radio" name="scheme_template" value="billed_on_cash" required>
+                  <span>💰 Billed on Cash</span>
+                </label>
+                <label class="radio-item">
+                  <input type="radio" name="scheme_template" value="qps">
+                  <span>📊 QPS</span>
+                </label>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>Promotion Type</label>
+              <div class="radio-group">
+                <label class="radio-item">
+                  <input type="radio" name="promotion_type" value="flat">
+                  <span>📏 Flat</span>
+                </label>
+                <label class="radio-item">
+                  <input type="radio" name="promotion_type" value="percent">
+                  <span>📈 Percent</span>
+                </label>
+                <label class="radio-item">
+                  <input type="radio" name="promotion_type" value="free_product">
+                  <span>🎁 Free Product</span>
+                </label>
+                <label class="radio-item">
+                  <input type="radio" name="promotion_type" value="slab">
+                  <span>📋 Slab</span>
+                </label>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>Status & Settings</label>
+              <div class="checkbox-group">
+                <label class="checkbox-item">
+                  <input type="checkbox" name="is_active" checked>
+                  <span>✅ Active</span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div id="billed-on-cash" class="conditional-section hidden">
+            <h4>💰 Billed on Cash Configuration</h4>
+            <div class="checkbox-group">
+              <label class="checkbox-item">
+                <input type="checkbox" id="ptr_based">
+                <span>📍 PTR Based</span>
+              </label>
+            </div>
+          </div>
+
+          <div id="percent-form" class="conditional-section hidden">
+            <h4>📈 Percentage Discount Configuration</h4>
+            <div class="form-grid">
+              <div class="form-group">
+                <label>Discount Type</label>
+                <input type="text" id="discount_type" class="form-control" placeholder="e.g., percentage">
+              </div>
+              <div class="form-group">
+                <label>Discount Value</label>
+                <input type="number" id="discount_value" class="form-control" placeholder="e.g., 10">
+              </div>
+              <div class="form-group">
+                <label>Qualifying Value</label>
+                <input type="number" id="qualifying_value" class="form-control" placeholder="Minimum purchase amount">
+              </div>
+              <div class="form-group">
+                <label>Operator</label>
+                <input type="text" id="operator" class="form-control" placeholder="e.g., >=">
+              </div>
+              <div class="form-group">
+                <label>Basis Type</label>
+                <input type="text" id="basis_type" class="form-control" placeholder="e.g., amount, quantity">
+              </div>
+            </div>
+          </div>
+
+          <div id="free-product-form" class="conditional-section hidden">
+            <h4>🎁 Free Product Configuration</h4>
+            <div class="form-grid">
+              <div class="form-group">
+                <label>Free Product Code</label>
+                <input type="text" id="free_product_code" class="form-control" placeholder="Product SKU">
+              </div>
+              <div class="form-group">
+                <label>Free Product Name</label>
+                <input type="text" id="free_product_name" class="form-control" placeholder="Product name">
+              </div>
+              <div class="form-group">
+                <label>Free Quantity</label>
+                <input type="number" id="free_quantity" class="form-control" placeholder="Quantity to give free">
+              </div>
+              <div class="form-group">
+                <label>Qualifying Quantity</label>
+                <input type="number" id="qualifying_quantity" class="form-control" placeholder="Minimum purchase quantity">
+              </div>
+            </div>
+          </div>
+
+          <div id="slab-form" class="conditional-section hidden">
+            <h4>📋 Slab Configuration</h4>
+            <div class="form-grid">
+              <div class="form-group">
+                <label>From Value</label>
+                <input type="number" id="from_value" class="form-control" placeholder="Minimum value">
+              </div>
+              <div class="form-group">
+                <label>To Value</label>
+                <input type="number" id="to_value" class="form-control" placeholder="Maximum value">
+              </div>
+              <div class="form-group">
+                <label>Discount Type</label>
+                <input type="text" id="slab_discount_type" class="form-control" placeholder="e.g., percentage, flat">
+              </div>
+              <div class="form-group">
+                <label>Discount Value</label>
+                <input type="number" id="slab_discount_value" class="form-control" placeholder="Discount amount">
+              </div>
+              <div class="form-group">
+                <label>Slab Basis</label>
+                <input type="text" id="slab_basis" class="form-control" placeholder="e.g., amount, quantity">
+              </div>
+              <div class="form-group">
+                <label>Operator</label>
+                <input type="text" id="slab_operator" class="form-control" placeholder="e.g., >=">
+              </div>
+            </div>
+          </div>
+
+          <div class="conditional-section">
+            <h4>🎯 Scheme Applicability</h4>
+            <div class="form-grid">
+              <div class="form-group">
+                <label>Criteria</label>
+                <input type="text" id="criteria" class="form-control" placeholder="e.g., brand, category">
+              </div>
+              <div class="form-group">
+                <label>Value</label>
+                <input type="text" id="criteria_value" class="form-control" placeholder="Criteria value">
+              </div>
+            </div>
+          </div>
+
+          <div style="margin-top: 30px;">
+            <button type="submit" class="btn btn-primary">
+              📤 Submit Scheme
+            </button>
+            <button type="button" id="confirm-btn" class="btn btn-success">
+              ⚡ Confirm & Generate Rule
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <hr class="section-divider">
+
+    <div class="card">
+      <div class="card-header">
+        🔍 Customer Evaluation
+      </div>
+      <div class="card-body">
+        <form id="evaluate-form">
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Customer Category</label>
+              <input type="text" name="customer_category" class="form-control" >
+            </div>
+            <div class="form-group">
+              <label>Region</label>
+              <input type="text" name="region" class="form-control" placeholder="e.g., North, South">
+            </div>
+            <div class="form-group">
+              <label>Customer Classification</label>
+              <input type="text" name="customer_classification" class="form-control" placeholder="red, amber, green">
+            </div>
+            <div class="form-group">
+              <label>Brand</label>
+              <input type="text" name="brand" class="form-control" placeholder="Brand name">
+            </div>
+            <div class="form-group">
+              <label>Category</label>
+              <input type="text" name="category" class="form-control" placeholder="Product category">
+            </div>
+            <div class="form-group">
+              <label>Purchase Value</label>
+              <input type="number" name="purchase_value" class="form-control" placeholder="Total purchase amount">
+            </div>
+            <div class="form-group">
+              <label>Purchase Quantity</label>
+              <input type="number" name="purchase_quantity" class="form-control" placeholder="Total quantity purchased">
+            </div>
+          </div>
+          <div style="margin-top: 25px;">
+            <button type="submit" class="btn btn-success">
+              🔎 Evaluate Rules
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="card response-section">
+      <div class="card-header">
+        📊 Response Output
+      </div>
+      <div class="card-body">
+        <div id="response" class="response-box">Waiting for response...</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const schemeForm = document.getElementById('scheme-form');
+    const evaluateForm = document.getElementById('evaluate-form');
+    const responseBox = document.getElementById('response');
+
+    // Show loading animation
+    function showLoading(button) {
+      const loading = document.createElement('span');
+      loading.className = 'loading';
+      button.appendChild(loading);
+      button.disabled = true;
+    }
+
+    function hideLoading(button) {
+      const loading = button.querySelector('.loading');
+      if (loading) loading.remove();
+      button.disabled = false;
+    }
+
+    // Show success/error messages
+    function showMessage(message, type = 'success') {
+      const messageDiv = document.createElement('div');
+      messageDiv.className = type === 'success' ? 'success-message' : 'error-message';
+      messageDiv.textContent = message;
+      
+      responseBox.parentNode.insertBefore(messageDiv, responseBox);
+      setTimeout(() => messageDiv.remove(), 5000);
+    }
+
+    // Show/hide conditional sections
+    schemeForm.addEventListener('change', () => {
+      const schemeTemplate = document.querySelector('input[name="scheme_template"]:checked')?.value;
+      document.getElementById('billed-on-cash').classList.toggle('hidden', schemeTemplate !== 'billed_on_cash');
+
+      const promotionType = document.querySelector('input[name="promotion_type"]:checked')?.value;
+      document.getElementById('percent-form').classList.toggle('hidden', promotionType !== 'percent');
+      document.getElementById('free-product-form').classList.toggle('hidden', promotionType !== 'free_product');
+      document.getElementById('slab-form').classList.toggle('hidden', promotionType !== 'slab');
+    });
+
+    schemeForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const submitBtn = e.target.querySelector('button[type="submit"]');
+      showLoading(submitBtn);
+
+      try {
+        const data = Object.fromEntries(new FormData(schemeForm));
+        data.is_active = schemeForm.is_active.checked;
+        data.priority_level = parseInt(data.priority_level, 10);
+
+        const scheme_id = data.scheme_id;
+
+        // Create scheme
+        await fetch('http://localhost:8000/scheme', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+
+        if (data.scheme_template === 'billed_on_cash') {
+          const billedOnCashPayload = {};
+          const ptrCheckbox = document.getElementById('ptr_based');
+          if (ptrCheckbox.checked) {
+            billedOnCashPayload.ptr_based = true;
+          }
+
+          await fetch(`http://localhost:8000/scheme/${scheme_id}/billed-on-cash`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(billedOnCashPayload)
+          });
+        }
+
+        const promo = data.promotion_type;
+        if (promo === 'percent') {
+          await fetch(`http://localhost:8000/scheme/${scheme_id}/flat-percent`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              discount_type: document.getElementById('discount_type').value,
+              discount_value: +document.getElementById('discount_value').value,
+              qualifying_value: +document.getElementById('qualifying_value').value,
+              operator: document.getElementById('operator').value,
+              basis_type: document.getElementById('basis_type').value
+            })
+          });
+        } else if (promo === 'free_product') {
+          await fetch(`http://localhost:8000/scheme/${scheme_id}/free-product`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              free_product_code: document.getElementById('free_product_code').value,
+              free_product_name: document.getElementById('free_product_name').value,
+              free_quantity: +document.getElementById('free_quantity').value,
+              qualifying_quantity: +document.getElementById('qualifying_quantity').value
+            })
+          });
+        } else if (promo === 'slab') {
+          await fetch(`http://localhost:8000/scheme/${scheme_id}/slab`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              from_value: +document.getElementById('from_value').value,
+              to_value: +document.getElementById('to_value').value,
+              discount_type: document.getElementById('slab_discount_type').value,
+              discount_value: +document.getElementById('slab_discount_value').value,
+              slab_basis: document.getElementById('slab_basis').value,
+              operator: document.getElementById('slab_operator').value
+            })
+          });
+        }
+
+        // Applicability
+        await fetch(`http://localhost:8000/scheme/${scheme_id}/applicability`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            criteria: document.getElementById('criteria').value,
+            value: document.getElementById('criteria_value').value
+          })
+        });
+
+        showMessage('✅ Scheme submitted successfully!');
+        responseBox.textContent = `Scheme "${data.scheme_name}" (ID: ${scheme_id}) has been created successfully!`;
+      } catch (error) {
+        showMessage('❌ Error submitting scheme: ' + error.message, 'error');
+        responseBox.textContent = 'Error: ' + error.message;
+      } finally {
+        hideLoading(submitBtn);
+      }
+    });
+
+    document.getElementById('confirm-btn').addEventListener('click', async (e) => {
+      const confirmBtn = e.target;
+      showLoading(confirmBtn);
+
+      try {
+        const scheme_id = document.querySelector('[name="scheme_id"]').value;
+        if (!scheme_id) {
+          throw new Error('Please enter a Scheme ID first');
+        }
+
+        const res = await fetch(`http://localhost:8000/scheme/${scheme_id}/generate_rule`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ confirm: true })
+        });
+
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+        }
+
+        const result = await res.json();
+        responseBox.textContent = JSON.stringify(result, null, 2);
+        showMessage('⚡ Rule generated successfully!');
+      } catch (error) {
+        showMessage('❌ Error generating rule: ' + error.message, 'error');
+        responseBox.textContent = 'Error: ' + error.message;
+      } finally {
+        hideLoading(confirmBtn);
+      }
+    });
+
+    // Function to format evaluate-rules response
+    function formatEvaluationResponse(result) {
+      if (!result || !result.result) {
+        return "Invalid response format received.";
+      }
+
+      const data = result.result;
+      const purchaseValue = data.purchase_value || 0;
+      const purchaseQuantity = data.purchase_quantity || 0;
+
+      // Check for flat_discount
+      if (data.flat_discount) {
+        const percentage = data.flat_discount.percentage || 0;
+        const discountAmount = data.flat_discount.discount_amount || 0;
+        const discountedPrice = data.flat_discount.discounted_price || 0;
+        
+        return `🎉 Great news! You received ${percentage}% discount!\n\n` +
+               `💰 Your total purchase value: ₹${purchaseValue}\n` +
+               `💸 Discount amount: ₹${discountAmount.toFixed(2)}\n` +
+               `💳 Total amount to be paid: ₹${discountedPrice.toFixed(2)}`;
+      }
+
+      // Check for free_product
+      if (data.free_product) {
+        const quantity = data.free_product.quantity || 0;
+        const name = data.free_product.name || 'Unknown Product';
+        const code = data.free_product.code || '';
+        
+        return `🎁 Congratulations! You got ${quantity} products of "${name}" ${code ? `(Code: ${code})` : ''} absolutely FREE!\n\n` +
+               `🛍️ Your purchase quantity: ${purchaseQuantity} units\n` +
+               `🎉 Free products awarded: ${quantity} units of ${name}`;
+      }
+
+      // Check for slab_discount
+      if (data.slab_discount) {
+        const type = data.slab_discount.type || '';
+        const value = data.slab_discount.value || 0;
+        const slab = data.slab_discount.slab || '';
+        const finalAmount = data.slab_discount.final_amount || 0;
+        
+        return `📊 Your purchase falls under slab range: ${slab}\n\n` +
+               `🎯 Discount Type: ${type.charAt(0).toUpperCase() + type.slice(1)}\n` +
+               `💰 You got a discount of ₹${value}\n` +
+               `💳 Your final amount to be paid: ₹${finalAmount}`;
+      }
+
+      // No discount applied
+      return `📝 Purchase Summary:\n\n` +
+             `💰 Your final amount: ₹${purchaseValue}\n` +
+             `📦 Quantity: ${purchaseQuantity} units\n\n` +
+             `ℹ️ No discounts applied to this purchase.`;
+    }
+
+    evaluateForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const evaluateBtn = e.target.querySelector('button[type="submit"]');
+      showLoading(evaluateBtn);
+
+      try {
+        const formData = new FormData(evaluateForm);
+        const data = {};
+
+        for (const [key, value] of formData.entries()) {
+          if (value !== '') {
+            if (key === 'purchase_value' || key === 'purchase_quantity') {
+              data[key] = +value;
+            } else {
+              data[key] = value;
+            }
+          }
+        }
+
+        const res = await fetch('http://localhost:8000/evaluate-rules', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+        }
+
+        const result = await res.json();
+        
+        // Format the response for better readability
+        const formattedResponse = formatEvaluationResponse(result);
+        responseBox.textContent = formattedResponse;
+        
+        showMessage('🔍 Rules evaluated successfully!');
+      } catch (error) {
+        showMessage('❌ Error evaluating rules: ' + error.message, 'error');
+        responseBox.textContent = 'Error: ' + error.message;
+      } finally {
+        hideLoading(evaluateBtn);
+      }
+    });
+  </script>
+</body>
+</html>
